@@ -6,7 +6,6 @@ class ActorAccessory extends Accessory {
   constructor(log, url, accessToken, device, homebridge, ServiceType, CharacteristicType) {
     super(log, url, accessToken, device, homebridge, ServiceType, CharacteristicType);
 
-    this.function_name = !device.function_name ? 'power' : device.function_name;
     this.actorService = new ServiceType(this.name);
     this.actorService.getCharacteristic(CharacteristicType)
                      .on('set', this.setState.bind(this))
@@ -34,23 +33,21 @@ class ActorAccessory extends Accessory {
     );
   }
 
-  getState(callback) {
-    this.callParticleFunction(this.function_name, '?', (error, response, body) => {
-      this.value = parseInt(body, 10);
+  getState(functionName, callback) {
+    this.callParticleFunction(functionName, '?', (error, response, body) => {
+      this.value = parseInt(body);
       try {
         callback(null, this.value);
-      } catch (err) {
-        this.log(`Caught error ${err} when calling homebridge callback.`);
+      } catch (error) {
+        this.log('Caught error '+ error + ' when calling homebridge callback.');
       }
     },
     true);
   }
 
-  setState(value, callback) {
+  setState(functionName, value, callback) {
     this.value = value;
-    this.callParticleFunction(this.function_name,
-                              value,
-                              (error, response, body) => this.callbackHelper(error, response, body, callback), true);
+    this.callParticleFunction(functionName, value, (error, response, body) => this.callbackHelper(error, response, body, callback), true);
   }
 
   callbackHelper(error, response, body, callback) {
